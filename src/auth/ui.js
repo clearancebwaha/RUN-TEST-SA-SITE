@@ -12,6 +12,8 @@ import { launchConfetti } from '../feedback/confetti.js';
 import { shakeInput, addFocusBorder } from '../utils/dom.js';
 import { appState } from '../state/store.js';
 import { exportJSON } from '../state/store.js';
+import { hydrateFromCloud } from '../state/sync.js';
+import { renderDashboard } from '../ui/dashboard.js';
 
 let authCurrentStep = 1;
 
@@ -129,6 +131,9 @@ async function handleVerifyOTP() {
       haptic('heavy');
       launchConfetti();
       hideEl('otp-error');
+
+      // Cloud-to-Local Hydration: pull remote state before showing success
+      await hydrateFromCloud();
 
       document.getElementById('auth-display-name').textContent = result.user.name;
       document.getElementById('auth-display-id').textContent = result.user.identifier;
@@ -322,6 +327,9 @@ export function authEventListeners() {
       showToast('☁️ Cloud sync activated! Your data is safe.');
     }
     AuthManager._pendingAction = null;
+
+    // Re-render dashboard with potentially hydrated data
+    renderDashboard();
   });
 
   addFocusBorder('auth-identifier');

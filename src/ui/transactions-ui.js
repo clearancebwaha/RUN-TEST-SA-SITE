@@ -33,13 +33,14 @@ export function renderTransactions() {
       </div>
       <div class="transactions-scroll" style="display:flex; flex-direction:column; gap:6px;">
         ${txList.map(tx => {
-          const icon = tx.isVaultWithdraw ? '🚨' : (CAT_ICONS[tx.category] || '📦');
-          const sign = tx.isVaultWithdraw ? '+' : '-';
-          const color = tx.isVaultWithdraw ? '#58cc02' : '#ff4b4b';
+          const isReconcile = tx.tier === 3 && tx.category === 'reconciliation';
+          const icon = isReconcile ? '🔧' : tx.isVaultWithdraw ? '🚨' : (CAT_ICONS[tx.category] || '📦');
+          const sign = isReconcile ? '±' : tx.isVaultWithdraw ? '+' : '-';
+          const color = isReconcile ? '#8a6d00' : tx.isVaultWithdraw ? '#58cc02' : '#ff4b4b';
           const label = tx.note ? esc(tx.note) : (tx.category || 'expense');
           const listaTag = tx.paidViaUtang ? '<span style="font-size:9px; font-weight:700; padding:2px 6px; border-radius:6px; background:#ffc80022; color:#8a6d00; margin-left:4px;">lista</span>' : '';
           const nutTag = tx.satietyScore ? `<span style="font-size:9px; font-weight:700; padding:2px 6px; border-radius:6px; background:#ffc80022; color:#8a6d00; margin-left:4px;">${SATIETY_TAGS.find(s => s.value === tx.satietyScore)?.emoji || ''}</span>` : '';
-          const canUndo = !tx.isVaultWithdraw;
+          const canUndo = !tx.isVaultWithdraw && !isReconcile;
           return `<div class="tx-item">
             <div style="display:flex; align-items:center; gap:10px; min-width:0; flex:1;">
               <span style="font-size:18px; flex-shrink:0;">${icon}</span>

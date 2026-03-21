@@ -15,7 +15,7 @@ import { saveEditBill, deleteEditBill } from '../ui/cards.js';
 import { openQuickAdd, txSelectedCategory, txSelectedSatiety, txPaidViaUtang,
          setTxCategory, setTxSatiety, setTxPaidViaUtang,
          renderCategoryBtns, renderSatietyBtns, updateNotePlaceholder } from '../ui/modals.js';
-import { addTransaction, addMicroIncome, addUtang, toggleBillPaid, withdrawFromVault } from '../engine/transactions.js';
+import { addTransaction, addMicroIncome, addUtang, toggleBillPaid, withdrawFromVault, reconcileBalance } from '../engine/transactions.js';
 import { computeEngine } from '../engine/budget.js';
 import { SFX } from '../feedback/sfx.js';
 import { haptic } from '../feedback/haptics.js';
@@ -229,8 +229,23 @@ export function setupEventListeners() {
   /* ── Focus borders ── */
   ['income-input', 'next-income-date', 'bill-label', 'bill-amount', 'bill-due',
    'tx-amount', 'tx-note', 'funds-amount', 'funds-label', 'utang-amount', 'utang-label',
-   'breakglass-amount', 'breakglass-reason', 'editbill-label', 'editbill-amount', 'editbill-due'
+   'breakglass-amount', 'breakglass-reason', 'editbill-label', 'editbill-amount', 'editbill-due',
+   'reconcile-amount'
   ].forEach(id => addFocusBorder(id));
+
+  /* ── Reconcile Balance modal ── */
+  document.getElementById('reconcile-close')?.addEventListener('click', () => closeModal('modal-reconcile'));
+  document.getElementById('modal-reconcile')?.addEventListener('click', e => {
+    if (e.target === document.getElementById('modal-reconcile')) closeModal('modal-reconcile');
+  });
+  document.getElementById('reconcile-submit')?.addEventListener('click', submitReconcile);
+  document.getElementById('reconcile-btn')?.addEventListener('click', () => {
+    closeModal('modal-settings');
+    // Pre-fill with current cash on hand
+    const inp = document.getElementById('reconcile-amount');
+    if (inp) inp.value = (appState.cashOnHand / 100).toFixed(2);
+    openModal('modal-reconcile');
+  });
 }
 
 /* ── Helper Functions ── */
@@ -268,7 +283,7 @@ function submitExpense() {
 
   if (isLista) {
     const utangEntry = {
-      id: uid(), amount, label: note || `Lista: ${txSelectedCategory}`, date: todayISO(), isPaid: false,
+      id: uid(), amount, label: note || `Lista: ${txSelectedCategory}`, date: todayISO(), amountPaid: 0,
     };
     appState.utangLedger.push(utangEntry);
     tx.linkedUtangId = utangEntry.id;
@@ -355,5 +370,25 @@ function submitBreakGlass() {
   haptic('heavy');
   closeModal('modal-breakglass');
   showToast(`🚨 ${formatPeso(amount)} withdrawn from Emergency Vault`);
+  renderDashboard();
+}
+
+function submitReconcile() {
+  const amount = pesoToCentavos(document.getElementById('reconcile-amount').value);
+  if (amount < 0) { shakeInput('reconcile-amount'); return; }
+  const result = reconcileBalance(amount);
+  if (!result.adjusted) {
+    showToast('✅ Your balance already matches — no adjustment needed!');
+    closeModal('modal-reconcile');
+    return;
+  }
+  SFX.play('coin');
+  haptic('medium');
+  closeModal('modal-reconcile');
+  if (result.isPositive) {
+    showToast(`🔧 +${formatPeso(Math.abs(result.delta))} adjustment — balance synced!`);
+  } else {
+    showToast(`🔧 -${formatPeso(Math.abs(result.delta))} adjustment — balance synced!`);
+  }
   renderDashboard();
 }

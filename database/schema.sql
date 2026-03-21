@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS utang_ledger (
   amount BIGINT NOT NULL,
   label TEXT NOT NULL,
   date TEXT NOT NULL,
-  is_paid BOOLEAN DEFAULT FALSE,
+  amount_paid BIGINT DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 

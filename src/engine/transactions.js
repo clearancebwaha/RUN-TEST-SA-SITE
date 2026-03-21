@@ -36,15 +36,16 @@ export function addMicroIncome(amount, label) {
   const entry = { id: uid(), amount, label: label || 'Funds added', date: todayISO() };
   appState.microIncomeLedger.push(entry);
 
-  // Auto-deduct utang FIFO before crediting cash
+  // Auto-deduct utang FIFO before crediting cash (Hulugan — partial payments)
   let remaining = amount;
   for (const u of appState.utangLedger) {
-    if (u.isPaid || remaining <= 0) continue;
-    if (remaining >= u.amount) {
-      remaining -= u.amount;
-      u.isPaid = true;
+    const owed = u.amount - (u.amountPaid || 0);
+    if (owed <= 0 || remaining <= 0) continue;
+    if (remaining >= owed) {
+      remaining -= owed;
+      u.amountPaid = u.amount; // fully settled
     } else {
-      u.amount -= remaining;
+      u.amountPaid = (u.amountPaid || 0) + remaining;
       remaining = 0;
     }
   }
@@ -56,7 +57,7 @@ export function addMicroIncome(amount, label) {
 
 export function addUtang(amount, label) {
   appState.utangLedger.push({
-    id: uid(), amount, label: label || 'Micro-loan', date: todayISO(), isPaid: false,
+    id: uid(), amount, label: label || 'Micro-loan', date: todayISO(), amountPaid: 0,
   });
   // Utang gives you cash now (borrowed money)
   appState.cashOnHand += amount;
@@ -126,4 +127,30 @@ export function undoTransaction(txId) {
 
   appState.transactions.splice(idx, 1);
   saveState(appState);
+}
+
+/* ── Wallet Reconciliation (Anti-Drift) ── */
+export function reconcileBalance(actualCashCentavos) {
+  const systemCash = appState.cashOnHand;
+  const delta = actualCashCentavos - systemCash;
+  if (delta === 0) return { adjusted: false };
+
+  // Log a special tier:3 correction transaction
+  const isPositive = delta > 0;
+  appState.transactions.push({
+    id: uid(),
+    date: todayISO(),
+    amount: Math.abs(delta),
+    tier: 3,
+    category: 'reconciliation',
+    note: isPositive
+      ? `🔧 Found +${formatPeso(Math.abs(delta))} untracked cash`
+      : `🔧 Cash was ${formatPeso(Math.abs(delta))} less than expected`,
+  });
+
+  // Adjust cash to match physical reality
+  appState.cashOnHand = actualCashCentavos;
+  saveState(appState);
+
+  return { adjusted: true, delta, isPositive };
 }

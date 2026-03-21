@@ -14,7 +14,7 @@ export const INITIAL_STATE = {
   tier2Config: { categories: ['food', 'transport'] },
   transactions: [],           // [{ id, date(ISO), amount(¢), tier, category, satietyScore?, note? }]
   setupDate: null,            // ISO
-  utangLedger: [],            // [{ id, amount(¢), label, date(ISO), isPaid }]
+  utangLedger: [],            // [{ id, amount(¢), label, date(ISO), amountPaid(¢) }]
   emergencyVault: 0,          // centavos — locked auto-saved vault
   nutritionLog: [],           // [{ date, score, cost }]
   lastProcessedDate: null,    // ISO — last date we ran end-of-day leftover split

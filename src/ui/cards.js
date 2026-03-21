@@ -78,14 +78,14 @@ export function renderEmergencyVault(vault) {
   }
 }
 
-/* ── Utang Status ── */
+/* ── Utang Status (Hulugan — partial payments supported) ── */
 export function renderUtangStatus() {
   const el = document.getElementById('utang-status-container');
   if (!el) return;
-  const active = appState.utangLedger.filter(u => !u.isPaid);
-  const paid = appState.utangLedger.filter(u => u.isPaid);
-  if (active.length === 0 && paid.length === 0) { el.innerHTML = ''; return; }
-  const totalOwed = active.reduce((s, u) => s + u.amount, 0);
+  const active = appState.utangLedger.filter(u => (u.amountPaid || 0) < u.amount);
+  const settled = appState.utangLedger.filter(u => (u.amountPaid || 0) >= u.amount);
+  if (active.length === 0 && settled.length === 0) { el.innerHTML = ''; return; }
+  const totalOwed = active.reduce((s, u) => s + (u.amount - (u.amountPaid || 0)), 0);
   el.innerHTML = `
     <div class="rounded-2xl p-4 animate-fade-in"
          style="background:linear-gradient(135deg,#fff8f0,#fff0e0); border:2px solid #ffc80022;">
@@ -102,8 +102,27 @@ export function renderUtangStatus() {
       </div>
       ${active.length > 0 ? `
         <div class="font-nums" style="font-size:20px; color:#ff4b4b; margin-bottom:4px;">${formatPeso(totalOwed)}</div>
-        <div style="font-size:11px; font-weight:600; color:#7a7a7a;">Auto-deducts from your next income 🔄</div>
-      ` : `<div style="font-size:12px; font-weight:600; color:#58cc02;">You cleared ${paid.length} loan${paid.length !== 1 ? 's' : ''}! 🎉</div>`}
+        <div style="font-size:11px; font-weight:600; color:#7a7a7a; margin-bottom:10px;">Auto-deducts from your next income 🔄</div>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          ${active.map(u => {
+            const remaining = u.amount - (u.amountPaid || 0);
+            const pct = Math.round(((u.amountPaid || 0) / u.amount) * 100);
+            return `<div style="background:rgba(255,255,255,0.6); border-radius:12px; padding:10px 12px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <span style="font-size:12px; font-weight:700; color:#2e2e2e;">${esc(u.label)}</span>
+                <span class="font-nums" style="font-size:12px; color:#ff4b4b;">${formatPeso(remaining)} left</span>
+              </div>
+              <div style="height:6px; border-radius:3px; background:#ede8df; overflow:hidden;">
+                <div style="height:100%; width:${pct}%; border-radius:3px;
+                     background:linear-gradient(90deg,#58cc02,#6ad606); transition:width 0.4s ease;"></div>
+              </div>
+              <div style="font-size:10px; font-weight:600; color:#7a7a7a; margin-top:3px;">
+                ${formatPeso(u.amountPaid || 0)} of ${formatPeso(u.amount)} paid (${pct}%)
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      ` : `<div style="font-size:12px; font-weight:600; color:#58cc02;">You cleared ${settled.length} loan${settled.length !== 1 ? 's' : ''}! 🎉</div>`}
     </div>`;
 }
 

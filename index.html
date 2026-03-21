@@ -522,6 +522,12 @@
           <span>📤</span> Export Data (JSON)
         </button>
 
+        <button id="reconcile-btn"
+          class="btn-squishy w-full py-3.5 font-bold rounded-2xl text-sm mb-3 text-left flex items-center gap-3"
+          style="background:linear-gradient(135deg,#fff8e0,#fff0d0); border:2px solid #ffc80044; color:#8a6d00;">
+          <span>🔧</span> Reconcile Balance
+        </button>
+
         <button id="reset-app-btn"
           class="btn-squishy w-full py-3.5 font-bold rounded-2xl text-sm mb-3 text-left flex items-center gap-3"
           style="background:#fff0f0; border:2px solid #ff4b4b; color:#ff4b4b;">
@@ -848,6 +854,61 @@
 
       </div>
     </div><!-- /modal-auth -->
+
+
+    <!-- ╔══════════════════════════════════════════════════════╗
+         ║  MODAL: Reconcile Balance (Anti-Drift)              ║
+         ╚══════════════════════════════════════════════════════╝ -->
+    <div id="modal-reconcile" class="modal-backdrop fixed inset-0 z-50 flex items-end justify-center"
+      style="display:none;">
+
+      <div class="glass-panel w-full max-w-md rounded-t-3xl p-5 pb-10 animate-slide-up"
+        style="box-shadow:0 -8px 40px rgba(0,0,0,0.2);">
+
+        <div class="w-10 h-1 rounded-full mx-auto mb-4" style="background:#ede8df;"></div>
+
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <span class="w-8 h-8 rounded-xl flex items-center justify-center text-sm"
+              style="background:linear-gradient(135deg,#fff8e0,#fff0d0);">🔧</span>
+            <h3 class="font-display text-base" style="color:#2e2e2e;">Reconcile Balance</h3>
+          </div>
+          <button id="reconcile-close"
+            class="btn-squishy w-10 h-10 rounded-full flex items-center justify-center text-lg font-black"
+            style="background:#f7f4f0; color:#7a7a7a;">✕</button>
+        </div>
+
+        <div class="rounded-2xl p-4 mb-4"
+          style="background:linear-gradient(135deg,#fff8e0,#fff0d0); border:2px solid #ffc80033;">
+          <p class="text-xs font-bold" style="color:#8a6d00;">
+            🔧 <b>Does your wallet match the app?</b> Count the cash in your wallet
+            and enter the real amount below. If they don't match, the app will log a
+            small correction — no history is deleted, just a sync adjustment.
+          </p>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block font-bold uppercase tracking-wider mb-2" style="font-size:11px; color:#7a7a7a;">Actual Cash
+              in Your Wallet (₱)</label>
+            <div class="relative">
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 font-nums text-xl font-black select-none"
+                style="color:#9a978f;">₱</span>
+              <input id="reconcile-amount" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0.00"
+                autocomplete="off"
+                class="w-full rounded-2xl pl-9 pr-4 py-4 font-nums text-2xl outline-none transition-all"
+                style="background:#f7f4f0; border:2px solid #ede8df; color:#2e2e2e;" />
+            </div>
+          </div>
+
+          <button id="reconcile-submit" class="btn-squishy w-full py-4 font-display text-white rounded-2xl text-base"
+            style="background:linear-gradient(135deg,#ffc800,#e0a000); box-shadow:0 5px 0 #c89000; color:#2e2e2e;">
+            Sync My Balance 🔧
+          </button>
+        </div>
+      </div>
+    </div><!-- /modal-reconcile -->
+
 
   </div><!-- /app -->
 
